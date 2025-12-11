@@ -5,8 +5,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {
@@ -23,8 +24,10 @@ model MenuItem {
   id          Int         @id @default(autoincrement())
   name        String
   description String
-  price       Decimal
+  price       Float       // Use Float to avoid JSON sequentialization issue
   category    String
+  image       String?     // must be included to show images properly
+  isAvailable Boolean     @default(true)
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
 }
@@ -34,10 +37,12 @@ model Order {
   userId      Int
   user        User        @relation(fields: [userId], references: [id])
   status      String      @default("CART")
-  totalAmount Decimal     @default(0)
+  totalAmount Float       @default(0.0)
   orderItems  OrderItem[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  @@index([userId])  // relationMode = "prisma"
 }
 
 model OrderItem {
@@ -47,5 +52,8 @@ model OrderItem {
   menuItemId Int
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
   quantity   Int
-  price      Decimal
+  price      Float    // record the price when the order is made
+
+  @@index([orderId])  // relationMode = "prisma"
+  @@index([menuItemId])  // relationMode = "prisma"
 }
