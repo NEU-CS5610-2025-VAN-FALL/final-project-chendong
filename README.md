@@ -119,3 +119,10 @@ npm test
 - **Access Control**: Protected API routes verify JWT tokens; admin-only actions are restricted.
 
 - **CORS**: Cross-Origin Resource Sharing is strictly configured to allow requests only from the deployed frontend.
+
+---
+## 📜 License
+
+This project was created as a final project for **Northeastern University**.
+
+---
