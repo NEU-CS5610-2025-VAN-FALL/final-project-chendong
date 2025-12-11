@@ -45,14 +45,14 @@ npm install
 
 - **Setup Database (SQLite for local)**:
 
-- Create a .env file in the api folder with the following content:
+- **Create a .env file in the api folder with the following content**:
 
-- Run migrations and seed data:
+- **Run migrations and seed data**:
 ```
 npx prisma migrate reset --force
 ```
 
-- Start the server:
+- **Start the server**:
 ```
 node index.js
 ```
@@ -61,26 +61,26 @@ node index.js
 
 ### 2. Frontend Setup (Client)
 
-Navigate to the client folder:
+- **Navigate to the client folder**:
 ```
 cd client
 ```
 
-Install dependencies:
+- **Install dependencies**:
 ```
 npm install
 ```
 
-Start the development server:
+- **Start the development server**:
 ```
 npm run dev
 ```
 
-App runs on **http://localhost:5173**
+- **App runs on **http://localhost:5173**
 
 ## ✅ Testing
 
-To run the client-side unit tests (using Vitest and React Testing Library):
+- **To run the client-side unit tests (using Vitest and React Testing Library)**:
 ```
 cd client
 npm test
