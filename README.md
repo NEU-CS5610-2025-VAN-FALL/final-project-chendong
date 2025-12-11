@@ -47,23 +47,17 @@ npm install
 
 - Create a .env file in the api folder with the following content:
 
-```
-DATABASE_URL="file:./dev.db"
-JWT_SECRET="supersecretkey12345"
-PORT=3000
-```
-
-Run migrations and seed data:
+- Run migrations and seed data:
 ```
 npx prisma migrate reset --force
 ```
 
-Start the server:
+- Start the server:
 ```
 node index.js
 ```
 
-Server runs on **http://localhost:3000**
+- Server runs on **http://localhost:3000**
 
 ### 2. Frontend Setup (Client)
 
