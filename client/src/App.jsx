@@ -6,7 +6,7 @@ import { ShoppingCart, User, Package, LogOut, Plus, ChefHat, MapPin, Utensils, S
 // CONFIGURATION
 // ==========================================
 const USE_MOCK_BACKEND = false; 
-let API_BASE_URL_VAR = 'http://localhost:3000/api';
+let API_BASE_URL_VAR = 'http://localhost:8080/api';
 if (typeof import.meta !== 'undefined' && typeof import.meta.env !== 'undefined' && import.meta.env.VITE_API_URL) {
     API_BASE_URL_VAR = import.meta.env.VITE_API_URL;
 }
