@@ -7,7 +7,7 @@ This project allows users to browse a menu, register/login, add items to a cart,
 
 ## 🚀 Live Demo
 
-- **Frontend (Client):** https://client-ogr1jnl0m-chendong-yus-projects.vercel.app  
+- **Frontend (Client):** [https://final-project-chendong-1wnlpxktt-chendong-yus-projects.vercel.app]
 - **Backend (API):** https://final-project-chendong.onrender.com  
 - **Database:** Hosted on Render (PostgreSQL)
 
@@ -102,7 +102,7 @@ npm test
 
 - **Orders**: View order history and status.
 
-- **Admin**: Add new custom menu items and soft-delete items (Admin access only).
+- **Admin**: Add new custom menu items and soft-delete items (Admin access **admin@neu.edu** only).
 
 ## 🛡️ Security
 
