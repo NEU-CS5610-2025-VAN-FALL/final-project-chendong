@@ -9,15 +9,33 @@ const cors = require('cors');
 // --- Initialization ---
 const prisma = new PrismaClient();
 const app = express();
+
+// 1. Configure ports
 const PORT = parseInt(process.env.PORT) || 8080;
 
-// Read secret key
+// 2. Read secret key
 const SECRET_KEY = process.env.JWT_SECRET || "supersecretkey12345";
 const COOKIE_NAME = "token";
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+
+// 3. read cookie
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
+app.use(cors({
+  origin: CLIENT_URL,
+  credentials: true
+}));
+
+// Dynamic Cookie Strategy
+const isProduction = process.env.NODE_ENV === 'production';
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: isProduction ? 'none' : 'lax',
+  secure: isProduction, 
+  maxAge: 3600000
+};
 
 // --- Middleware: Auth Check ---
 const requireAuth = (req, res, next) => {
@@ -32,16 +50,16 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-// Test responsiveness
+// Health check routers
 app.get('/ping', (req, res) => res.send('pong'));
 
 
 // --- 1. Auth & User ---
 
-// Register
+// Sign up
 app.post('/api/auth/register', async (req, res) => {
   const { email, password, name } = req.body;
-  
+
   if (!email || !email.includes('@') || !password || password.length < 6) {
     return res.status(400).json({ error: 'Invalid email or password (min 6 chars)' });
   }
@@ -53,19 +71,17 @@ app.post('/api/auth/register', async (req, res) => {
     });
     
     const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
-    res.cookie(COOKIE_NAME, token, { httpOnly: true, sameSite: 'lax' });
+    // Dymanic cookieOptions
+    res.cookie(COOKIE_NAME, token, cookieOptions); 
     
-    res.json({ 
-      message: 'Registered', 
-      user: { id: user.id, name: user.name, email: user.email } 
-    });
+    res.json({ message: 'Registered', user: { id: user.id, name: user.name, email: user.email } });
   } catch (e) { 
     console.error(e);
     res.status(400).json({ error: 'User already exists' }); 
   }
 });
 
-// Login
+// Login (Auth required)
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await prisma.user.findUnique({ where: { email } });
@@ -75,17 +91,16 @@ app.post('/api/auth/login', async (req, res) => {
   }
 
   const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
-  res.cookie(COOKIE_NAME, token, { httpOnly: true, sameSite: 'lax' });
+
+  res.cookie(COOKIE_NAME, token, cookieOptions); 
   
-  res.json({ 
-    message: 'Logged in!', 
-    user: { id: user.id, name: user.name, email: user.email } 
-  });
+  res.json({ message: 'Logged in!', user: { id: user.id, name: user.name, email: user.email } });
 });
 
 // Logout
 app.post('/api/auth/logout', (req, res) => {
-  res.clearCookie(COOKIE_NAME);
+
+  res.clearCookie(COOKIE_NAME, cookieOptions);
   res.json({ message: 'Logged out' });
 });
 
@@ -93,16 +108,16 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/auth/me', async (req, res) => {
   const token = req.cookies[COOKIE_NAME];
   if (!token) return res.json({ loggedIn: false });
-  
+
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
     const user = await prisma.user.findUnique({ 
       where: { id: decoded.id },
       select: { id: true, name: true, email: true } 
     });
-    
+
     if (!user) return res.json({ loggedIn: false });
-    
+
     res.json({ loggedIn: true, user });
   } catch (err) {
     res.json({ loggedIn: false });
@@ -122,10 +137,7 @@ app.get('/api/menu', async (req, res) => {
 // Add Item (POST) - Login Required (Auth)
 app.post('/api/menu', requireAuth, async (req, res) => {
   const { name, price, description, category } = req.body;
-  
-  if (!name || !price || isNaN(price)) {
-    return res.status(400).json({ error: 'Invalid input' });
-  }
+  if (!name || !price || isNaN(price)) return res.status(400).json({ error: 'Invalid input' });
   
   try {
     const newItem = await prisma.menuItem.create({
@@ -135,7 +147,7 @@ app.post('/api/menu', requireAuth, async (req, res) => {
         price: parseFloat(price), 
         category: category || "Custom",
         image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
-        isAvailable: true // available by default
+        isAvailable: true
       }
     });
     res.json(newItem);
@@ -147,8 +159,9 @@ app.post('/api/menu', requireAuth, async (req, res) => {
 
 app.delete('/api/menu/:id', requireAuth, async (req, res) => {
   const id = parseInt(req.params.id);
-  
+
   try {
+    // Soft deletion
     await prisma.menuItem.update({
       where: { id },
       data: { isAvailable: false }
@@ -181,25 +194,23 @@ const getCart = async (userId) => {
 
 app.get('/api/cart', requireAuth, async (req, res) => {
   const cart = await getCart(req.user.id);
-  // May include removed objects
+  // Removed objects are visible but cannot be added further
   res.json(cart);
 });
 
-// Add to Cart
+// Add items to cart
 app.post('/api/cart/items', requireAuth, async (req, res) => {
   let { menuItemId, quantity } = req.body;
   quantity = quantity || 1;
   const userId = req.user.id;
 
-  if (!menuItemId) {
-    return res.status(400).json({ error: 'Item ID required' });
-  }
+  if (!menuItemId) return res.status(400).json({ error: 'Item ID required' });
 
   const cart = await getCart(userId);
   const menuItemIdInt = parseInt(menuItemId);
 
   const menuItem = await prisma.menuItem.findUnique({ where: { id: menuItemIdInt }});
-
+  
   if (!menuItem || !menuItem.isAvailable) {
     return res.status(404).json({ error: 'Menu item not found or unavailable' });
   }
@@ -227,7 +238,7 @@ app.post('/api/cart/items', requireAuth, async (req, res) => {
   res.json({ message: 'Added to cart' });
 });
 
-// Remove Item
+// Remove item
 app.delete('/api/cart/items/:id', requireAuth, async (req, res) => {
   const orderItemId = parseInt(req.params.id);
   await prisma.orderItem.delete({ where: { id: orderItemId } });
@@ -237,14 +248,9 @@ app.delete('/api/cart/items/:id', requireAuth, async (req, res) => {
 // Checkout
 app.post('/api/orders/checkout', requireAuth, async (req, res) => {
   const cart = await getCart(req.user.id);
-  
-  if (cart.orderItems.length === 0) {
-    return res.status(400).json({ error: 'Cart is empty' });
-  }
+  if (cart.orderItems.length === 0) return res.status(400).json({ error: 'Cart is empty' });
 
-  const total = cart.orderItems.reduce((acc, item) => {
-    return acc + (item.price * item.quantity);
-  }, 0);
+  const total = cart.orderItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
   const order = await prisma.order.update({
     where: { id: cart.id },
@@ -270,7 +276,7 @@ app.get('/api/orders', requireAuth, async (req, res) => {
   res.json(orders);
 });
 
+// Listen port
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT} 🎉 🚀`);
- });
- 
+});
