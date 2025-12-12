@@ -33,7 +33,7 @@ const isDeployed = !!process.env.CLIENT_URL; // Check if CLIENT_URL is live on R
 const isProductionCookiePolicy = isDeployed || process.env.NODE_ENV === 'production'; 
 const cookieOptions = {
   httpOnly: true,
-  sameSite: isProduction ? 'none' : 'lax',
+  sameSite: isProductionCookiePolicy ? 'none' : 'lax',
   secure: isProductionCookiePolicy, 
   maxAge: 3600000
 };
@@ -44,7 +44,7 @@ const requireAuth = (req, res, next) => {
   if (!token) return res.status(401).json({ message: 'Unauthorized' });
   try {
     const decoded = jwt.verify(token, SECRET_KEY);
-    req.user = decoded; 
+    req.user = decoded;
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Invalid token' });
