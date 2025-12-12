@@ -1,7 +1,7 @@
 # NEU Bistro - Food Ordering Application
 
-A full-stack food ordering application built with **React**, **Node.js**, **Express**, and **Prisma (PostgreSQL)**.  
-This project allows users to browse a menu, register/login, add items to a cart, and place orders.
+A Software as a Service (SaaS) food ordering application built with **React**, **Node.js**, **Express**, and **Prisma (PostgreSQL)**.  
+This project allows users to browse a menu, register/login, add items to a cart, and place orders. Authentication is implemented using token cookies.
 
 ---
 
