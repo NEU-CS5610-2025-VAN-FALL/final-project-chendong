@@ -21,16 +21,17 @@ app.use(express.json());
 app.use(cookieParser());
 
 // 3. Dynamic CORS config
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const ALLOWED_ORIGINS_STRING = process.env.CLIENT_URL || 'http://localhost:3000';
+const ALLOWED_ORIGINS = ALLOWED_ORIGINS_STRING.split(',').map(s => s.trim());
+console.log('Allowed CORS Origins:', ALLOWED_ORIGINS);
 
 app.use(cors({
-  origin: CLIENT_URL,
+  origin: ALLOWED_ORIGINS,
   credentials: true
 }));
 
 // Dynamic Cookie Strategy
-const isDeployed = !!process.env.CLIENT_URL; // Check if CLIENT_URL is live on Render
-const isProductionCookiePolicy = isDeployed || process.env.NODE_ENV === 'production'; 
+const isProductionCookiePolicy = process.env.NODE_ENV === 'production';
 const cookieOptions = {
   httpOnly: true,
   sameSite: isProductionCookiePolicy ? 'none' : 'lax',
