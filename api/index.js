@@ -20,7 +20,7 @@ const COOKIE_NAME = "token";
 app.use(express.json());
 app.use(cookieParser());
 
-// 3. read cookie
+// 3. Dynamic CORS config
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 app.use(cors({
@@ -29,11 +29,12 @@ app.use(cors({
 }));
 
 // Dynamic Cookie Strategy
-const isProduction = process.env.NODE_ENV === 'production';
+const isDeployed = !!process.env.CLIENT_URL; // Check if CLIENT_URL is live on Render
+const isProductionCookiePolicy = isDeployed || process.env.NODE_ENV === 'production'; 
 const cookieOptions = {
   httpOnly: true,
   sameSite: isProduction ? 'none' : 'lax',
-  secure: isProduction, 
+  secure: isProductionCookiePolicy, 
   maxAge: 3600000
 };
 
