@@ -5,12 +5,8 @@ import { ShoppingCart, User, Package, LogOut, Plus, ChefHat, MapPin, Utensils, S
 // ==========================================
 // CONFIGURATION
 // ==========================================
-const USE_MOCK_BACKEND = false; 
-let API_BASE_URL_VAR = 'http://localhost:8080/api';
-if (typeof import.meta !== 'undefined' && typeof import.meta.env !== 'undefined' && import.meta.env.VITE_API_URL) {
-    API_BASE_URL_VAR = import.meta.env.VITE_API_URL;
-}
-const API_BASE_URL = API_BASE_URL_VAR;
+const USE_MOCK_BACKEND = false;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 // ==========================================
 // STYLES & ANIMATIONS
